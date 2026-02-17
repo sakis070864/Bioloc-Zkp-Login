@@ -8,6 +8,10 @@ BioLoc-ZKP is a next-generation security infrastructure that fuses Zero-Knowledg
 
 Traditional security models rely on what you know (passwords) or what you have (tokens). BioLoc-ZKP shifts the paradigm to who you are and how you behave.
 
+🔐 Secure Biometric Gateway
+
+This application implements a high-security login window that leverages biometric factors to control access passes and identity verification. It serves as a hardened entry point that ensures only the authorized biological user can gain clearance, effectively acting as a digital gatekeeper for sensitive systems.
+
 It establishes a "Cognitive Firewall" that verifies human intent and physical identity without ever storing a raw password or biometric template in the cloud. Your secrets never leave your device; only mathematical proofs do.
 
 🛠️ Core Security Architecture
