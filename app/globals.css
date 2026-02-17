@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+:root {
+  --background: #020617;
+  /* Deep Night Blue */
+  --foreground: #f8fafc;
+  /* Slate 50 */
+
+  /* Premium Colors */
+  --neon-blue: #0ea5e9;
+  --neon-purple: #8b5cf6;
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(15, 23, 42, 0.6);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.text-glow {
+  text-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
+}
+
+.liquid-gradient {
+  background: linear-gradient(90deg, #0ea5e9, #8b5cf6, #0ea5e9);
+  background-size: 200% 100%;
+  animation: liquid-flow 3s linear infinite;
+}
+
+@keyframes liquid-flow {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes gradient-x {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-x {
+  background-size: 200% auto;
+  animation: gradient-x 4s ease infinite;
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
