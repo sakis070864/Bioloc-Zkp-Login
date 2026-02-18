@@ -14,7 +14,7 @@ export async function POST(req: Request) {
         }
 
         // Validated available model from user key
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         // DETERMINE NEXT STEP BASED ON HISTORY LENGTH
         // Count only USER messages to determine the phase

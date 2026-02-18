@@ -458,7 +458,7 @@ export default function SecureBiometricLogin() {
                                         <div className="flex items-center space-x-2">
                                             <div className="w-24 h-2 bg-neutral-800 rounded-full overflow-hidden">
                                                 <div
-                                                    className={`h-full ${biometricResult?.score! >= threshold ? 'bg-green-500' : 'bg-red-500'}`}
+                                                    className={`h-full ${(biometricResult?.score || 0) >= threshold ? 'bg-green-500' : 'bg-red-500'}`}
                                                     style={{ width: `${biometricResult?.score}%` }}
                                                 />
                                             </div>
@@ -560,7 +560,7 @@ export default function SecureBiometricLogin() {
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-red-400 font-bold">DEVICE_ID:</p>
-                                        <p className="text-white font-bold break-all">{clientInfo.platform} // {clientInfo.screenRes}</p>
+                                        <p className="text-white font-bold break-all">{clientInfo.platform} {"//"} {clientInfo.screenRes}</p>
                                     </div>
                                     <div className="col-span-1 md:col-span-2 space-y-1 border-t border-red-800/50 pt-4 mt-2">
                                         <p className="text-red-400 font-bold">FINGERPRINT:</p>

@@ -30,6 +30,7 @@ function DashboardLayoutContent({
 
         if (urlCompanyId) {
             sessionStorage.setItem("zkp_company_id", urlCompanyId);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
             setCompanyId(urlCompanyId);
         } else if (setupId) {
             // Handle Magic Link Setup

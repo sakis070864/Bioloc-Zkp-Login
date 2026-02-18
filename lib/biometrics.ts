@@ -108,8 +108,8 @@ export function compareBiometrics(profile: BiometricFactors, session: SessionDat
     ]);
 
     for (const key of factorKeys) {
-        let pVal = profile[key];
-        let lVal = loginFactors[key];
+        const pVal = profile[key];
+        const lVal = loginFactors[key];
 
         // ---------------- ADAPTIVE LOGIC V2 (HARDENED) ----------------
 
@@ -143,7 +143,7 @@ export function compareBiometrics(profile: BiometricFactors, session: SessionDat
 
         // --------------------------------------------------------------
 
-        let diff = Math.abs(pVal - lVal);
+        const diff = Math.abs(pVal - lVal);
         let similarity = Math.max(0, 1.0 - (diff / (pVal || 1))); // Prevent div/0
 
         // Strictness Boost for key Cognitive Factors
@@ -192,11 +192,11 @@ export function analyzeBiometric30(
 
 
     // 13-16. Specific Key Dwells & Latencies
-    let spaceDwells: number[] = [];
-    let shiftDwells: number[] = [];
-    let deleteDwells: number[] = [];
-    let enterLatencies: number[] = [];
-    let deleteSeeks: number[] = [];
+    const spaceDwells: number[] = [];
+    const shiftDwells: number[] = [];
+    const deleteDwells: number[] = [];
+    const enterLatencies: number[] = [];
+    const deleteSeeks: number[] = [];
 
     for (let i = 0; i < downEvents.length; i++) {
         const e = downEvents[i];
@@ -228,8 +228,8 @@ export function analyzeBiometric30(
     const hesitationRatio = hesitations.length / (flightTimes.length || 1);
 
     // Pause after Word/Sentence
-    let wordPauses: number[] = [];
-    let sentencePauses: number[] = [];
+    const wordPauses: number[] = [];
+    const sentencePauses: number[] = [];
     for (let i = 1; i < downEvents.length; i++) {
         const prev = downEvents[i - 1];
         if (prev.code === "Space") wordPauses.push(flightTimes[i - 1]);
@@ -282,7 +282,7 @@ export function analyzeBiometric30(
     const consistencyScore = dwellAvg > 0 ? (dwellStd / dwellAvg) : 0;
 
     // Flow: Smoothed Variance (Mean of Rolling Variances) - distinct from simple variance
-    let flowVariances = [];
+    const flowVariances = [];
     for (let i = 0; i < flightTimes.length - 4; i++) {
         const window = flightTimes.slice(i, i + 5);
         flowVariances.push(stdDev(window));
@@ -291,7 +291,7 @@ export function analyzeBiometric30(
 
 
     // --- MOBILE SENSORS (Existing Logic) ---
-    let mobileData = { holdingAngleMean: 0, holdingStability: 0, gaitEnergy: 0 };
+    const mobileData = { holdingAngleMean: 0, holdingStability: 0, gaitEnergy: 0 };
     if (sensorData && sensorData.length > 0) {
         const betas = sensorData.filter(d => d.beta !== null).map(d => d.beta || 0);
         const gammas = sensorData.filter(d => d.gamma !== null).map(d => d.gamma || 0);
@@ -569,7 +569,7 @@ export function analyzeBiometric12(events: KeyEvent[], startTime?: number): Biom
     const shiftBalance = totalShifts === 0 ? 0 : (rightShifts - leftShifts) / totalShifts;
 
     // 6. Spacebar Impact (Latency before/after space)
-    let spaceLatencies: number[] = [];
+    const spaceLatencies: number[] = [];
     for (let i = 1; i < downEvents.length; i++) {
         if (downEvents[i].code === "Space") {
             spaceLatencies.push(downEvents[i].time - downEvents[i - 1].time);
