@@ -3,7 +3,8 @@ import React from 'react';
 import { AlertTriangle, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 
-export default function AccessDeniedPage({ searchParams }: { searchParams: { violation?: string } }) {
+export default async function AccessDeniedPage({ searchParams }: { searchParams: Promise<{ violation?: string }> }) {
+    const { violation } = await searchParams;
     return (
         <div className="min-h-screen bg-black text-red-600 flex flex-col items-center justify-center p-4 font-mono uppercase">
             <div className="max-w-md w-full border-4 border-red-600 p-8 relative overflow-hidden animate-pulse">

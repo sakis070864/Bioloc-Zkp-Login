@@ -4,8 +4,8 @@ import { doc, setDoc } from 'firebase/firestore';
 
 // IN-MEMORY FALLBACK (For when Firestore is unreachable/blocked)
 // Note: This resets on server restart, which is fine for short-lived nonces.
-if (!global.nonceStore) {
-    global.nonceStore = new Map();
+if (!(globalThis as any).nonceStore) {
+    (globalThis as any).nonceStore = new Map();
 }
 
 export async function POST(req: Request) {
@@ -42,14 +42,14 @@ export async function POST(req: Request) {
             console.error("Firestore Write Failed (Using Fallback):", fsError.message);
             
             // FALLBACK: Store in Memory
-            global.nonceStore.set(nonce, {
+            (globalThis as any).nonceStore.set(nonce, {
                 ...challengeData,
                 expiresAt: Date.now() + 60000 // 1 minute expiry
             });
             
             // Cleanup old nonces
-            for (const [key, val] of global.nonceStore.entries()) {
-                if (Date.now() > val.expiresAt) global.nonceStore.delete(key);
+            for (const [key, val] of (globalThis as any).nonceStore.entries()) {
+                if (Date.now() > val.expiresAt) (globalThis as any).nonceStore.delete(key);
             }
         }
 

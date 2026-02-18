@@ -37,10 +37,8 @@ export async function POST(req: Request) {
             challengeData = firestoreReadResult.data();
         } else {
             // 2. FALLBACK: Check Memory Store
-            // @ts-ignore
-            if (global.nonceStore && global.nonceStore.has(nonce)) {
-                // @ts-ignore
-                challengeData = global.nonceStore.get(nonce);
+            if ((globalThis as any).nonceStore && (globalThis as any).nonceStore.has(nonce)) {
+                challengeData = (globalThis as any).nonceStore.get(nonce);
                 isInMemory = true;
                 console.log(`[AUTH-DEBUG] Found Nonce ${nonce} in Memory Store.`);
             } else {
@@ -56,8 +54,7 @@ export async function POST(req: Request) {
 
         // Mark Nonce as USED
         if (isInMemory) {
-            // @ts-ignore
-            global.nonceStore.set(nonce, { ...challengeData, status: 'USED', usedAt: Date.now() });
+            (globalThis as any).nonceStore.set(nonce, { ...challengeData, status: 'USED', usedAt: Date.now() });
         } else {
             // Atomic Firestore Update
             try {
