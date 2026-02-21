@@ -233,11 +233,36 @@ export default function SecureBiometricLogin() {
             timer = setTimeout(() => setCountdown(c => c - 1), 1000);
         } else if (intruderAlert && countdown === 0) {
             // SELF DESTRUCT SEQUENCE
-            window.location.href = "about:blank"; // Fallback to kill session
-            window.close(); // Attempt to close
+            if (window.opener) {
+                window.opener.postMessage("zkp_login_failed", "*");
+                window.close();
+            } else if (window.parent && window.parent !== window) {
+                window.parent.postMessage("zkp_login_failed", "*");
+            } else {
+                window.location.href = "about:blank"; // Fallback
+            }
         }
         return () => clearTimeout(timer);
     }, [intruderAlert, countdown]);
+
+    // --- Success Auto-Close Effect ---
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (state === 'SUCCESS') {
+            timer = setTimeout(() => {
+                // Determine how to close or redirect based on context
+                if (window.opener) {
+                    window.opener.postMessage("zkp_login_success", "*");
+                    window.close();
+                } else if (window.parent && window.parent !== window) {
+                    window.parent.postMessage("zkp_login_success", "*");
+                } else {
+                    window.location.href = "/dashboard";
+                }
+            }, 1500); // 1.5 seconds delay to show "Access Granted"
+        }
+        return () => clearTimeout(timer);
+    }, [state]);
 
     // --- UI Variants ---
     const containerVariants = {
