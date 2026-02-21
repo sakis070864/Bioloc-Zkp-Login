@@ -42,6 +42,7 @@ const SecureLoginPage = () => {
     const [gateError, setGateError] = useState("");
     const [gateLoading, setGateLoading] = useState(false);
     const [showGatePassword, setShowGatePassword] = useState(false);
+    const [gateRetries, setGateRetries] = useState(0);
 
     // Biometric Shield State
     const [state, setState] = useState<GuardState>('IDLE'); // Start Idle for Biometrics (once auth)
@@ -117,7 +118,13 @@ const SecureLoginPage = () => {
             const data = await res.json();
 
             if (!res.ok) {
-                setGateError(data.error || "Verification Failed");
+                if (gateRetries >= 1) {
+                    setGateError("MAX ATTEMPTS REACHED. LOCKING DOWN.");
+                    triggerImmediateLockdown();
+                    return;
+                }
+                setGateRetries(prev => prev + 1);
+                setGateError(`${data.error || "Verification Failed"} - 1 ATTEMPT REMAINING`);
                 return;
             }
 
@@ -259,8 +266,16 @@ const SecureLoginPage = () => {
     const handleAnalyze = async () => {
         // STRICT PASSWORD ENFORCEMENT
         if (phrase !== gatePassword) {
-            setState('FAIL');
-            setErrorMsg("CRITICAL: INCORRECT PASSPHRASE");
+            if (retries >= 1) {
+                handleLockdown();
+            } else {
+                setRetries(prev => prev + 1);
+                setState('FAIL');
+                setErrorMsg("CRITICAL: INCORRECT PASSPHRASE. 1 ATTEMPT REMAINING.");
+                setPhrase("");
+                keysBuffer.current = [];
+                inputRef.current?.focus();
+            }
             return;
         }
 
@@ -334,7 +349,14 @@ const SecureLoginPage = () => {
 
             setState('SUCCESS');
             setTimeout(() => {
-                router.push('/dashboard');
+                if (window.opener) {
+                    window.opener.postMessage("zkp_login_success", "*");
+                    window.close();
+                } else if (window.parent && window.parent !== window) {
+                    window.parent.postMessage("zkp_login_success", "*");
+                } else {
+                    router.push('/dashboard');
+                }
             }, 1500);
 
         } catch (err: any) {
@@ -353,6 +375,21 @@ const SecureLoginPage = () => {
         }
     };
 
+    const triggerImmediateLockdown = () => {
+        setIsAuthenticated(true); // Switch to shield view to show lockdown
+        setState('LOCKED');
+        let count = 5;
+        setCountdown(count);
+        const timer = setInterval(() => {
+            count--;
+            setCountdown(count);
+            if (count <= 0) {
+                clearInterval(timer);
+                performRobustClose();
+            }
+        }, 1000);
+    };
+
     const handleLockdown = () => {
         setState('LOCKED');
         let count = 5;
@@ -362,10 +399,20 @@ const SecureLoginPage = () => {
             setCountdown(count);
             if (count <= 0) {
                 clearInterval(timer);
-                if (window.opener) window.close();
-                else router.push('/access-denied');
+                performRobustClose();
             }
         }, 1000);
+    };
+
+    const performRobustClose = () => {
+        if (window.opener) {
+            window.opener.postMessage("zkp_login_failed", "*");
+            window.close();
+        } else if (window.parent && window.parent !== window) {
+            window.parent.postMessage("zkp_login_failed", "*");
+        } else {
+            router.push('/access-denied');
+        }
     };
 
 
