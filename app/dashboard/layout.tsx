@@ -44,7 +44,7 @@ function DashboardLayoutContent({
         } else {
             // Check if we are already securely traversing?
             // If strictly no ID, redirect to secure login
-            router.push("/secure-login");
+            router.push("/");
         }
     }, [urlCompanyId, router]);
 

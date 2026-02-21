@@ -76,6 +76,11 @@ export default function SecureBiometricLogin() {
                 setThreshold(data.threshold);
             }
 
+            // Persist Company ID for the Dashboard Redirect
+            if (typeof window !== "undefined") {
+                sessionStorage.setItem("zkp_company_id", companyId);
+            }
+
             // TRANSITION TO STAGE 2
             setPassword(''); // CLEAR PASSWORD for Re-entry
             setRetryCount(0); // Reset retries
@@ -257,7 +262,10 @@ export default function SecureBiometricLogin() {
                 } else if (window.parent && window.parent !== window) {
                     window.parent.postMessage("zkp_login_success", "*");
                 } else {
-                    window.location.href = "/dashboard";
+                    // Purposefully do nothing here.
+                    // The main dashboard is hosted in a separate application.
+                    // This prevents redirecting to the local Admin dashboard layout.
+                    console.log("Login sequence completed securely.");
                 }
             }, 1500); // 1.5 seconds delay to show "Access Granted"
         }

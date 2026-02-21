@@ -52,7 +52,7 @@ function DashboardContent() {
                 setCompanyId(storedId);
             } else {
                 // If context is missing, redirect to login to re-establish session context
-                window.location.href = "/secure-login";
+                window.location.href = "/";
             }
         }
     }, []);
