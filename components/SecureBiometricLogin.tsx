@@ -279,10 +279,18 @@ export default function SecureBiometricLogin() {
         let timer: NodeJS.Timeout;
         if (state === 'SUCCESS') {
             timer = setTimeout(() => {
-                // IMPORTANT: If a direct redirect URL was provided in the query parameters, 
+                // IMPORTANT: Read dynamically right now from the browser window 
+                // to completely bypass Next.js SSR/SSG caching bugs on Vercel
+                let currentRedirectUrl = redirectUrl;
+                if (!currentRedirectUrl && typeof window !== 'undefined') {
+                    const fallbackParams = new URLSearchParams(window.location.search);
+                    currentRedirectUrl = fallbackParams.get('redirectUrl');
+                }
+
+                // If a direct redirect URL was provided in the query parameters, 
                 // prioritize bouncing the user directly to that URL with the token.
-                if (redirectUrl) {
-                    window.location.href = `${redirectUrl}?zkp_token=${gatewayToken}`;
+                if (currentRedirectUrl) {
+                    window.location.href = `${currentRedirectUrl}?zkp_token=${gatewayToken}`;
                     return;
                 }
 
