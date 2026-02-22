@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sakis.com - Client Portal (TEST)</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { background: #1e293b; padding: 2rem; border-radius: 12px; border: 1px solid #334155; text-align: center; max-width: 400px; width: 100%; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); }
+        h1 { margin-top: 0; color: #38bdf8; font-size: 1.5rem; }
+        .status { margin: 1.5rem 0; padding: 1rem; border-radius: 8px; background: #0f172a; font-size: 0.875rem; color: #94a3b8; border: 1px dashed #334155; word-break: break-all; min-height: 80px; display: flex; align-items: center; justify-content: center; text-align: left; }
+        .success { border-color: #10b981; color: #34d399; background: rgba(16, 185, 129, 0.1); }
+        button { background: #0ea5e9; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background 0.2s; width: 100%; }
+        button:hover { background: #0284c7; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Sakis Corp Portal</h1>
+        <p>This is a simulated external client application testing the JSON snippet gateway.</p>
+        
+        <div id="statusBox" class="status">
+            Doors Locked. 🔒<br/>Waiting for Biometric Token...
+        </div>
+
+        <button onclick="launchZkpGateway()">Login with Bio-ZKP</button>
+    </div>
+
+    <script>
+        // 1. The Client Integration Snippet (from dashboard)
+        const zkpHook = {
+            "action": "ZKP_AUTH",
+            "companyId": "sakis_corp", // Hardcoded for this test
+            "endpoint": "http://localhost:3000/" // Testing locally
+        };
+
+        let activeGatewayWindow = null;
+
+        function launchZkpGateway() {
+            const width = 450;
+            const height = 850;
+            const left = (screen.width - width) / 2;
+            const top = (screen.height - height) / 2;
+            
+            document.getElementById('statusBox').innerHTML = 'Gateway spawned. Awaiting cryptographic proof... ⏳';
+            document.getElementById('statusBox').className = 'status';
+
+            // 2. Open the Gateway Endpoint
+            activeGatewayWindow = window.open(
+                zkpHook.endpoint, 
+                'ZKP_Secure_Gateway', 
+                `width=${width},height=${height},left=${left},top=${top}`
+            );
+        }
+
+        // 3. Listen for the Cryptographic Token Handoff
+        window.addEventListener('message', (event) => {
+            // In production, MUST verify event.origin matches zkpHook.endpoint strictly.
+            // For now, testing locahost to localhost.
+            
+            const payload = event.data;
+            
+            if (payload && payload.status === "zkp_login_success") {
+                console.log("Success Token Received!", payload.token);
+                
+                const box = document.getElementById('statusBox');
+                box.className = 'status success';
+                
+                // Decode the JWT purely for visual proof on the frontend.
+                // Normally the backend would verify the signature of this token using process.env.JWT_SECRET!
+                try {
+                    const base64Url = payload.token.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    const decoded = JSON.parse(jsonPayload);
+                    
+                    box.innerHTML = `<strong>Doors Unlocked! 🔓</strong><br/><br/>Token Received:<br/><code>${payload.token.substring(0, 30)}...</code><br/><br/>Payload Data:<br/>User: ${decoded.userId}<br/>Status: ${decoded.status}`;
+                } catch (e) {
+                    box.innerHTML = `<strong>Doors Unlocked! 🔓</strong><br/>Token Received: ${payload.token}`;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

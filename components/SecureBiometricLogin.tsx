@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Lock, Fingerprint, CheckCircle, XCircle, AlertTriangle, ScanEye, Terminal, Activity } from 'lucide-react';
 import { db } from '@/lib/firebase';
@@ -27,11 +28,29 @@ export default function SecureBiometricLogin() {
     const [error, setError] = useState('');
     const [retryCount, setRetryCount] = useState(0); // STRICT: Track failed attempts
 
+    // NEW: Store the token to pass back to the client application
+    const [gatewayToken, setGatewayToken] = useState<string | null>(null);
+
     // --- Data Store ---
     const [threshold, setThreshold] = useState<number>(0); // Loaded from server response (optional visual) or default
     const [intentToken, setIntentToken] = useState<string | null>(null); // NEW: Token from Stage 1
     const [zkpProof, setZkpProof] = useState<any>(null);
     const [biometricResult, setBiometricResult] = useState<{ score: number, distance: number } | null>(null);
+
+    // NEW: Gateway URL Parameters
+    const searchParams = useSearchParams();
+    const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+
+    // --- Auto-fill from URL Parameters ---
+    useEffect(() => {
+        const passedCompanyId = searchParams.get('companyId');
+        const passedRedirectUrl = searchParams.get('redirectUrl');
+
+        console.log("[GATEWAY INIT] Parameters Detected:", { passedCompanyId, passedRedirectUrl });
+
+        if (passedCompanyId) setCompanyId(passedCompanyId);
+        if (passedRedirectUrl) setRedirectUrl(passedRedirectUrl);
+    }, [searchParams]);
 
     // --- Intruder Alert State ---
     const [intruderAlert, setIntruderAlert] = useState(false);
@@ -171,6 +190,11 @@ export default function SecureBiometricLogin() {
 
             console.log("   > Session Established:", verifyData);
 
+            // Store the JWT minted for the external Client App
+            if (verifyData.gatewayToken) {
+                setGatewayToken(verifyData.gatewayToken);
+            }
+
             // Success!
             // We can assume the server might return the score in success payload if we want to show it?
             // Let's assume verifyData.user or similar.
@@ -255,12 +279,25 @@ export default function SecureBiometricLogin() {
         let timer: NodeJS.Timeout;
         if (state === 'SUCCESS') {
             timer = setTimeout(() => {
-                // Determine how to close or redirect based on context
+                // IMPORTANT: If a direct redirect URL was provided in the query parameters, 
+                // prioritize bouncing the user directly to that URL with the token.
+                if (redirectUrl) {
+                    window.location.href = `${redirectUrl}?zkp_token=${gatewayToken}`;
+                    return;
+                }
+
+                // Otherwise, fall back to the Pop-Up Communication method
                 if (window.opener) {
-                    window.opener.postMessage("zkp_login_success", "*");
+                    window.opener.postMessage(
+                        { status: "zkp_login_success", token: gatewayToken },
+                        "*" // Note: in production, explicitly list allowed origins
+                    );
                     window.close();
                 } else if (window.parent && window.parent !== window) {
-                    window.parent.postMessage("zkp_login_success", "*");
+                    window.parent.postMessage(
+                        { status: "zkp_login_success", token: gatewayToken },
+                        "*"
+                    );
                 } else {
                     // Purposefully do nothing here.
                     // The main dashboard is hosted in a separate application.
@@ -270,7 +307,7 @@ export default function SecureBiometricLogin() {
             }, 1500); // 1.5 seconds delay to show "Access Granted"
         }
         return () => clearTimeout(timer);
-    }, [state]);
+    }, [state, gatewayToken, redirectUrl]);
 
     // --- UI Variants ---
     const containerVariants = {

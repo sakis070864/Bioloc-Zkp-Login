@@ -5,6 +5,7 @@ import { decrypt, createSession, setSessionCookie } from '@/lib/auth-cookie';
 import { compareBiometrics, SessionData } from '@/lib/biometrics';
 
 import { zkp } from '@/lib/zkp';
+import { SignJWT } from 'jose';
 
 export async function POST(req: Request) {
     try {
@@ -194,7 +195,26 @@ export async function POST(req: Request) {
         await setSessionCookie(token);
 
         console.log(`[AUTH-SUCCESS] Session issued for ${userId}`);
-        return NextResponse.json({ success: true, user: sessionPayload });
+
+        // --- GATEWAY MINTING ---
+        // Create an explicit transfer JWT designed specifically for the Client App waiting in the other window.
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-for-dev-only');
+        const gatewayToken = await new SignJWT({
+            action: "ZKP_AUTH_SUCCESS",
+            userId: userId,
+            companyId: companyId,
+            status: "VERIFIED"
+        })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setIssuedAt()
+            .setExpirationTime('2m') // Token expires entirely in 2 minutes
+            .sign(secret);
+
+        return NextResponse.json({
+            success: true,
+            user: sessionPayload,
+            gatewayToken: gatewayToken // Send the newly minted token to the UI
+        });
 
     } catch (error: any) {
         console.error("Biometric Verification Error:", error);
